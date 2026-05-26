@@ -19,7 +19,7 @@ const meta = {
     },
     onClose: {
       action: "onClose",
-      description: "닫기 버튼, 오버레이 클릭 시 호출됩니다.",
+      description: "닫기 버튼, 오버레이 클릭, ESC 키 입력 시 호출됩니다.",
     },
     onSubmit: {
       action: "onSubmit",
@@ -47,6 +47,9 @@ export const Interactive: Story = {
         <p>
           아래 버튼으로 모달을 열고 <kbd>Tab</kbd> / <kbd>Shift + Tab</kbd>으로
           포커스가 모달 내부에서만 순환하는지 확인해 보세요.
+        </p>
+        <p>
+          모달이 열린 상태에서 <kbd>Esc</kbd>를 누르면 닫히는 동작도 함께 확인할 수 있습니다.
         </p>
 
         <button type="button" onClick={() => setIsOpen(true)}>

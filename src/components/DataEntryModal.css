@@ -105,6 +105,11 @@
   cursor: pointer;
 }
 
+.dem-btn:focus-visible {
+  outline: 2px solid #1e293b;
+  outline-offset: 2px;
+}
+
 .dem-btn-secondary {
   border-color: #d0d8e4;
   background: #fff;
@@ -117,11 +122,18 @@
 
 .dem-btn-primary {
   background: #2563eb;
+  border-color: #1d4ed8;
   color: #fff;
 }
 
 .dem-btn-primary:hover {
   background: #1d4ed8;
+}
+
+.dem-btn-primary:focus-visible {
+  /* 파란 버튼에서도 포커스 링이 묻히지 않도록 고대비 링을 분리해 표시합니다. */
+  outline: 2px solid #ffffff;
+  box-shadow: 0 0 0 4px rgb(15 23 42 / 45%);
 }
 
 @media (max-width: 640px) {
@@ -141,7 +153,7 @@
   }
 
   .dem-actions {
-    flex-direction: column-reverse;
+    flex-direction: column;
   }
 
   .dem-btn {

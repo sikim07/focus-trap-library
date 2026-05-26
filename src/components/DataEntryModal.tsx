@@ -1,4 +1,4 @@
-import { useId, useMemo, useRef } from 'react';
+import { useEffect, useId, useMemo, useRef } from 'react';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import './DataEntryModal.css';
 
@@ -40,6 +40,25 @@ export const DataEntryModal = ({
 
   // 모달이 열린 상태에서만 focus trap을 활성화해 키보드 입력이 배경으로 새지 않게 합니다.
   useFocusTrap(dialogRef, isOpen, { initialFocusRef: firstInputRef, restoreFocus: true });
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const handleEscape = (event: KeyboardEvent): void => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    // ESC로 닫는 동작은 키보드 사용자에게 모달 탈출 경로를 제공합니다.
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isOpen, onClose]);
 
   if (!isOpen) {
     return null;
@@ -121,11 +140,11 @@ export const DataEntryModal = ({
           </div>
 
           <footer className="dem-actions">
-            <button type="button" className="dem-btn dem-btn-secondary" onClick={onClose}>
-              취소
-            </button>
             <button type="submit" className="dem-btn dem-btn-primary">
               저장
+            </button>
+            <button type="button" className="dem-btn dem-btn-secondary" onClick={onClose}>
+              취소
             </button>
           </footer>
         </form>
