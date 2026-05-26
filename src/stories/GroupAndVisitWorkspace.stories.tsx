@@ -27,7 +27,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "실무형 Group & Visit 입력 페이지를 모사한 스토리입니다. Visit는 반드시 특정 Visit Group에 소속되며, 그룹/행 추가와 저장 시나리오를 포함합니다.",
+          "실무형 Group & Visit 입력 페이지를 모사한 스토리입니다. Visit는 특정 Visit Group에 소속되며, 행 삽입/삭제와 키보드 입력 흐름을 검증합니다.",
       },
     },
   },
@@ -39,9 +39,13 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   render: () => {
     const workspaceRef = useRef<HTMLDivElement>(null);
-    const visitLabelInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+    const visitLabelInputRefs = useRef<Record<string, HTMLInputElement | null>>(
+      {},
+    );
     const [saveMessage, setSaveMessage] = useState("");
-    const [pendingFocusVisitId, setPendingFocusVisitId] = useState<string | null>(null);
+    const [pendingFocusVisitId, setPendingFocusVisitId] = useState<
+      string | null
+    >(null);
     const idRef = useRef(10);
 
     const createId = (prefix: string): string => {
@@ -82,7 +86,9 @@ export const Default: Story = {
       },
     ]);
 
-    const updateGroupField = <K extends keyof Omit<VisitGroupCard, "id" | "visits">>(
+    const updateGroupField = <
+      K extends keyof Omit<VisitGroupCard, "id" | "visits">,
+    >(
       groupId: string,
       field: K,
       value: VisitGroupCard[K],
@@ -136,7 +142,9 @@ export const Default: Story = {
             return group;
           }
 
-          const insertIndex = group.visits.findIndex((visit) => visit.id === afterVisitId);
+          const insertIndex = group.visits.findIndex(
+            (visit) => visit.id === afterVisitId,
+          );
           if (insertIndex < 0) {
             return {
               ...group,
@@ -165,7 +173,9 @@ export const Default: Story = {
             return group;
           }
 
-          const nextVisits = group.visits.filter((visit) => visit.id !== visitId);
+          const nextVisits = group.visits.filter(
+            (visit) => visit.id !== visitId,
+          );
           return {
             ...group,
             visits: nextVisits.length > 0 ? nextVisits : [createEmptyVisit()],
@@ -252,7 +262,10 @@ export const Default: Story = {
     }, [pendingFocusVisitId, groups]);
 
     return (
-      <div ref={workspaceRef} style={{ minHeight: "100vh", background: "#f1f5f9", color: "#0f172a" }}>
+      <div
+        ref={workspaceRef}
+        style={{ minHeight: "100vh", background: "#f1f5f9", color: "#0f172a" }}
+      >
         <div style={{ display: "flex", minHeight: "100vh" }}>
           <aside
             style={{
@@ -282,7 +295,14 @@ export const Default: Story = {
             >
               Group & Visit
             </button>
-            {["CRF Form", "Schedule", "Item Code", "Event", "Report", "Visit Window"].map((item) => (
+            {[
+              "CRF Form",
+              "Schedule",
+              "Item Code",
+              "Event",
+              "Report",
+              "Visit Window",
+            ].map((item) => (
               <button
                 key={item}
                 type="button"
@@ -314,15 +334,49 @@ export const Default: Story = {
               <div>
                 <h3 style={{ margin: 0, fontSize: 24 }}>Group & Visit</h3>
                 <p style={{ margin: "8px 0 0", color: "#475569" }}>
-                  Visit Group 상단 추가, 하위 Visit 행 추가/삭제, 모달 포커스 트랩을 함께 검증합니다.
+                  Visit Group/Visit 입력 시나리오에서 행 삽입/삭제와 키보드 이동
+                  흐름을 검증합니다.
                 </p>
               </div>
               <div style={{ display: "flex", gap: 8 }}>
-                <button type="button" style={saveButtonStyle} onClick={addVisitGroup}>
+                <button
+                  type="button"
+                  style={saveButtonStyle}
+                  onClick={addVisitGroup}
+                >
                   + Visit Group 추가
                 </button>
               </div>
             </header>
+
+            <section
+              aria-label="입력 가이드"
+              style={{
+                marginBottom: 14,
+                border: "1px solid #d9e1ee",
+                borderRadius: 10,
+                background: "#ffffff",
+                padding: "10px 12px",
+                color: "#334155",
+                fontSize: 13,
+                lineHeight: 1.55,
+              }}
+            >
+              <strong
+                style={{ display: "block", marginBottom: 4, color: "#0f172a" }}
+              >
+                입력 가이드
+              </strong>
+              <div>
+                목적: Visit 입력 중 행 삽입/삭제를 빠르게 수행하고 저장 단위를
+                Group으로 유지합니다.
+              </div>
+              <div>
+                흐름: 각 행의 Visit Label 입력 후 Action의 + 행 추가로 해당 행
+                아래에 즉시 삽입합니다.
+              </div>
+              <div>{`검증: Tab 이동(Visit Label -> + 행 추가 -> - 행 삭제), 삽입 위치, Save Group 결과 메시지를 확인합니다.`}</div>
+            </section>
 
             <div style={{ display: "grid", gap: 14 }}>
               {groups.map((group, groupIndex) => (
@@ -344,7 +398,9 @@ export const Default: Story = {
                       marginBottom: 12,
                     }}
                   >
-                    <strong style={{ fontSize: 16 }}>Visit Group Card {groupIndex + 1}</strong>
+                    <strong style={{ fontSize: 16 }}>
+                      Visit Group Card {groupIndex + 1}
+                    </strong>
                   </header>
 
                   <div
@@ -360,7 +416,11 @@ export const Default: Story = {
                       placeholder="Visit Group ID"
                       value={group.visitGroupId}
                       onChange={(event) =>
-                        updateGroupField(group.id, "visitGroupId", event.target.value)
+                        updateGroupField(
+                          group.id,
+                          "visitGroupId",
+                          event.target.value,
+                        )
                       }
                     />
                     <input
@@ -368,7 +428,11 @@ export const Default: Story = {
                       placeholder="Visit Group Code"
                       value={group.visitGroupCode}
                       onChange={(event) =>
-                        updateGroupField(group.id, "visitGroupCode", event.target.value)
+                        updateGroupField(
+                          group.id,
+                          "visitGroupCode",
+                          event.target.value,
+                        )
                       }
                     />
                     <input
@@ -376,7 +440,11 @@ export const Default: Story = {
                       placeholder="Visit Group Label"
                       value={group.visitGroupLabel}
                       onChange={(event) =>
-                        updateGroupField(group.id, "visitGroupLabel", event.target.value)
+                        updateGroupField(
+                          group.id,
+                          "visitGroupLabel",
+                          event.target.value,
+                        )
                       }
                     />
                     <select
@@ -410,7 +478,11 @@ export const Default: Story = {
                         type="checkbox"
                         checked={group.repeat}
                         onChange={(event) =>
-                          updateGroupField(group.id, "repeat", event.target.checked)
+                          updateGroupField(
+                            group.id,
+                            "repeat",
+                            event.target.checked,
+                          )
                         }
                       />
                       Repeat
@@ -450,7 +522,12 @@ export const Default: Story = {
                           placeholder="Visit ID"
                           value={visit.visitId}
                           onChange={(event) =>
-                            updateVisitField(group.id, visit.id, "visitId", event.target.value)
+                            updateVisitField(
+                              group.id,
+                              visit.id,
+                              "visitId",
+                              event.target.value,
+                            )
                           }
                         />
                         <input
@@ -458,7 +535,12 @@ export const Default: Story = {
                           placeholder="Visit Code"
                           value={visit.visitCode}
                           onChange={(event) =>
-                            updateVisitField(group.id, visit.id, "visitCode", event.target.value)
+                            updateVisitField(
+                              group.id,
+                              visit.id,
+                              "visitCode",
+                              event.target.value,
+                            )
                           }
                         />
                         <input
@@ -469,14 +551,21 @@ export const Default: Story = {
                           placeholder="Visit Label"
                           value={visit.visitLabel}
                           onChange={(event) =>
-                            updateVisitField(group.id, visit.id, "visitLabel", event.target.value)
+                            updateVisitField(
+                              group.id,
+                              visit.id,
+                              "visitLabel",
+                              event.target.value,
+                            )
                           }
                         />
                         <div style={{ display: "flex", gap: 8 }}>
                           <button
                             type="button"
                             style={subtleActionButtonStyle}
-                            onClick={() => insertVisitRowAfter(group.id, visit.id, true)}
+                            onClick={() =>
+                              insertVisitRowAfter(group.id, visit.id, true)
+                            }
                           >
                             + 행 추가
                           </button>
@@ -514,7 +603,8 @@ export const Default: Story = {
 
             <footer style={{ marginTop: 12, padding: "8px 2px" }}>
               <small style={{ color: "#475569", fontSize: 13 }}>
-                {saveMessage || "저장 이력을 보려면 각 그룹 하단 Save Group을 눌러주세요."}
+                {saveMessage ||
+                  "저장 이력을 보려면 각 그룹 하단 Save Group을 눌러주세요."}
               </small>
             </footer>
           </main>
