@@ -121,13 +121,13 @@
 }
 
 .dem-btn-primary {
-  background: #2563eb;
-  border-color: #1d4ed8;
+  background: var(--save-btn-bg, #0f766e);
+  border-color: var(--save-btn-border, #115e59);
   color: #fff;
 }
 
 .dem-btn-primary:hover {
-  background: #1d4ed8;
+  background: var(--save-btn-hover-bg, #0d9488);
 }
 
 .dem-btn-primary:focus-visible {
