@@ -1,0 +1,59 @@
+.app-shell {
+  max-width: 840px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.app-shell h1 {
+  margin: 0 0 8px;
+  font-size: 30px;
+  color: #0f172a;
+}
+
+.app-description {
+  margin: 0 0 22px;
+  color: #334155;
+}
+
+.app-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.app-controls button {
+  height: 40px;
+  padding: 0 14px;
+  border: 1px solid #d1dae6;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #0f172a;
+  cursor: pointer;
+}
+
+.app-controls button:hover {
+  background: #f8fafc;
+}
+
+.app-log {
+  margin-top: 18px;
+  padding: 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.app-log h2 {
+  margin: 0 0 8px;
+  font-size: 16px;
+  color: #0f172a;
+}
+
+.app-log pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #1e293b;
+  font-size: 13px;
+  line-height: 1.5;
+}
