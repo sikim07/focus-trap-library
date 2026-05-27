@@ -449,6 +449,7 @@ export const Default: Story = {
                     />
                     <select
                       style={fieldStyle}
+                      aria-label="Visit Type"
                       value={group.type}
                       onChange={(event) =>
                         updateGroupField(
