@@ -271,7 +271,8 @@ export const Default: Story = {
           overflowX: "hidden",
         }}
       >
-        <header
+        <div
+          role="presentation"
           style={{
             height: 46,
             background: "#ffffff",
@@ -292,7 +293,7 @@ export const Default: Story = {
             <span>Study: ***** PMS</span>
             <span>User: s****.k**@t**********.com</span>
           </div>
-        </header>
+        </div>
 
         <div
           className="icw-layout"
