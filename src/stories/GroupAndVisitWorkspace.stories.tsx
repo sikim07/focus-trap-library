@@ -23,7 +23,38 @@ type GroupAndVisitWorkspaceStoryArgs = {
   sidebarWidth: number;
   showGuide: boolean;
   trapEnabled: boolean;
+  defaultVisitType: VisitGroupCard["type"];
+  initialVisitRows: number;
 };
+
+const clampInitialVisitRows = (rowCount: number): number =>
+  Math.max(1, Math.min(5, Math.floor(rowCount)));
+
+const createSeedVisits = (rowCount: number): VisitRow[] =>
+  Array.from({ length: clampInitialVisitRows(rowCount) }, (_, index) => {
+    const visitNumber = index + 1;
+    return {
+      id: `seed-visit-${visitNumber}`,
+      visitId: `T${visitNumber}`,
+      visitCode: String(visitNumber * 11),
+      visitLabel: `T${visitNumber}`,
+    };
+  });
+
+const createInitialGroups = (
+  defaultVisitType: VisitGroupCard["type"],
+  initialVisitRows: number,
+): VisitGroupCard[] => [
+  {
+    id: "group-1",
+    visitGroupId: "V1",
+    visitGroupCode: "Visit Group[1]",
+    visitGroupLabel: "Primary Group",
+    type: defaultVisitType,
+    repeat: false,
+    visits: createSeedVisits(initialVisitRows),
+  },
+];
 
 const meta = {
   title: "Pages/GroupAndVisitWorkspace",
@@ -32,6 +63,8 @@ const meta = {
     sidebarWidth: 240,
     showGuide: true,
     trapEnabled: true,
+    defaultVisitType: "Normal Visit",
+    initialVisitRows: 2,
   },
   argTypes: {
     sidebarWidth: {
@@ -45,6 +78,15 @@ const meta = {
     trapEnabled: {
       control: "boolean",
       description: "워크스페이스 영역 focus trap 활성화 여부",
+    },
+    defaultVisitType: {
+      control: "select",
+      options: ["All Visit", "Normal Visit", "Unscheduled"],
+      description: "새로 생성되는 Visit Group의 기본 Visit Type",
+    },
+    initialVisitRows: {
+      control: { type: "range", min: 1, max: 5, step: 1 },
+      description: "초기 렌더 시 기본 그룹에 생성할 Visit 행 수",
     },
   },
   parameters: {
@@ -91,25 +133,14 @@ export const Default: Story = {
       visitGroupId: "",
       visitGroupCode: "",
       visitGroupLabel: "",
-      type: "Normal Visit",
+      type: args.defaultVisitType,
       repeat: false,
       visits: [createEmptyVisit()],
     });
 
-    const [groups, setGroups] = useState<VisitGroupCard[]>([
-      {
-        id: "group-1",
-        visitGroupId: "V1",
-        visitGroupCode: "Visit Group[1]",
-        visitGroupLabel: "Primary Group",
-        type: "All Visit",
-        repeat: false,
-        visits: [
-          { id: "visit-1", visitId: "T1", visitCode: "11", visitLabel: "T1" },
-          { id: "visit-2", visitId: "T2", visitCode: "22", visitLabel: "T2" },
-        ],
-      },
-    ]);
+    const [groups, setGroups] = useState<VisitGroupCard[]>(() =>
+      createInitialGroups(args.defaultVisitType, args.initialVisitRows),
+    );
 
     const updateGroupField = <
       K extends keyof Omit<VisitGroupCard, "id" | "visits">,
@@ -285,6 +316,13 @@ export const Default: Story = {
         window.cancelAnimationFrame(rafId);
       };
     }, [pendingFocusVisitId, groups]);
+
+    useEffect(() => {
+      setGroups(createInitialGroups(args.defaultVisitType, args.initialVisitRows));
+      setSaveMessage("");
+      setPendingFocusVisitId(null);
+      visitLabelInputRefs.current = {};
+    }, [args.defaultVisitType, args.initialVisitRows]);
 
     return (
       <div
