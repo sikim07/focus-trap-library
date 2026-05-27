@@ -1,122 +1,165 @@
-# Focus Trap Library PoC
+# 임상 데이터 정합성(Data Integrity) 보장을 위한 웹 표준 기반 입력 폼 컴포넌트 라이브러리 (PoC)
 
-CRO B2B 웹 애플리케이션의 데이터 입력 오류(포커스 이탈, 미스 클릭, 모달 외부 키보드 접근)를 줄이기 위한
-독립형 UI 컴포넌트 라이브러리 PoC입니다.
+> CRO 임상 운영 환경에서 발생하는 포커스 이탈 기반 휴먼 에러를 구조적으로 차단하기 위해 설계한 UI 안전장치 라이브러리
 
-프로젝트의 목표는 기존 메인 서비스의 대규모 리팩토링 없이, 안전한 입력 컴포넌트를 부분 이식해
-실무 적용 가능성과 기술 완성도를 검증하는 것입니다.
+## 배포 링크
 
-## Problem Statement
+- https://focus-trap-library.vercel.app
 
-- 운영팀이 대량의 임상 데이터를 빠르게 입력하는 과정에서 포커스 이탈로 인한 휴먼 에러가 발생
-- 레거시 구조상 전면 개편은 어렵고, 단위 컴포넌트 단위로 위험 구간을 우선 개선 필요
-- 따라서 웹 표준(WAI-ARIA)과 키보드 접근성을 기준으로 재사용 가능한 모달 입력 컴포넌트를 검증
+---
 
-## Tech Stack
+## 1) 배경 및 문제 정의 (Background & WHY)
 
+### 도메인 제약
+
+이 프로젝트는 CRO(임상시험수탁기관) B2B 운영 화면을 전제로 합니다.  
+운영팀은 짧은 시간 안에 대량의 바이탈/코드 데이터를 **키보드 중심으로 연속 입력**하며, 입력 흐름이 끊기면 바로 품질 저하로 이어집니다.
+
+### 레거시 시스템의 핵심 리스크
+
+외주 기반으로 누적된 모놀리식 UI에서는 다음 문제가 반복적으로 발생했습니다.
+
+- 입력 중 포커스가 예기치 않게 이탈
+- 미스 클릭으로 모달 외부 요소가 활성화
+- 모달 오픈 상태에서도 `Tab`이 배경 요소로 이동
+
+문제의 본질은 단순 UX 불편이 아니라, **임상 데이터 오염(Data Contamination)** 가능성을 높이는 운영 리스크라는 점입니다.  
+화면 상의 작은 포커스 결함이 정정 비용, 재검증, 일정 지연 같은 비즈니스 비용으로 전가되었습니다.
+
+### 왜 별도 라이브러리 전략인가
+
+메인 서비스 전면 리팩터링은 일정/리스크 측면에서 비현실적이었습니다.  
+따라서 본 PoC는 다음 전략을 택했습니다.
+
+- 위험 구간(모달 기반 입력)만 선별해 **독립 컴포넌트로 분리**
+- WAI-ARIA + 키보드 접근성 규약을 **코드 레벨 기본값**으로 내재화
+- Storybook 기반으로 재현 가능한 시나리오를 구축해 **검증 비용을 낮춤**
+
+---
+
+## 2) 해결 접근 (What We Built)
+
+### A. `useFocusTrap`: 입력 흐름 보호를 위한 코어 훅
+
+`useFocusTrap`은 모달 컨테이너를 기준으로 포커스를 경계 내부에 유지하는 핵심 레이어입니다.
+
+- `Tab`/`Shift+Tab` 순환 제어
+- 모달 오픈 시 초기 포커스 진입점 지정 (`initialFocusRef`)
+- 모달 종료 시 직전 작업 지점으로 포커스 복원 (`restoreFocus`)
+- `focusin` 캡처를 통한 외부 포커스 강제 복귀
+- focusable 후보의 실질 가시성/활성 상태 필터링
+
+핵심은 `keydown`뿐 아니라 `focusin` 캡처를 함께 사용했다는 점입니다.  
+키보드 입력뿐 아니라 스크립트/마우스 이벤트로 발생하는 포커스 이탈도 동일 정책으로 차단합니다.
+
+### B. 임상 입력 모달 컴포넌트 계층
+
+- `DataEntryModal`: 피험자 ID, 방문 코드, 수축기 혈압 입력 흐름 PoC
+- `CodeValueModal`: 동적 행 추가/삭제, 필수 검증, 오류 피드백을 포함한 코드 값 입력 모달
+
+두 컴포넌트 모두 `role="dialog"`, `aria-modal`, `aria-labelledby`, `label`-`id` 매핑을 기본 구조로 채택해 접근성과 정확도를 동시에 확보합니다.
+
+### C. Storybook 기반 재현 가능한 업무 시나리오
+
+실제 운영 화면 패턴을 반영한 워크스페이스 스토리를 통해 다음을 반복 검증합니다.
+
+- Baseline / ModalOpen / ValidationError 프리셋
+- 모달 열림/닫힘 시 포커스 이동 규칙
+- 입력 오류 발생 시 모달 유지 + 오류 복구 플로우
+- 페이지 레벨 trap on/off 비교 검증
+
+---
+
+## 3) 아키텍처 관점의 설계 원칙
+
+### 1. 데이터 정합성을 UI 레벨 비기능 요구사항으로 격상
+
+포커스 제어를 단순 인터랙션이 아닌 **정합성 보호 메커니즘**으로 정의했습니다.
+
+### 2. “부분 이식 가능한 안전 컴포넌트” 전략
+
+레거시 전면 교체 대신 고위험 입력 구간에 선택적으로 적용 가능하도록 설계해, 도입 난이도와 조직 저항을 낮췄습니다.
+
+### 3. 표준 기반 구현
+
+서드파티 의존 없이 Web API + React Hook으로 구현해 동작 원인과 제어점을 투명하게 유지했습니다.
+
+### 4. 검증 자산화
+
+Storybook을 문서가 아닌 “운영 재현 실험장”으로 사용해 QA/기획/개발이 동일 시나리오로 합의할 수 있게 했습니다.
+
+---
+
+## 4) 비즈니스 임팩트 (Expected Outcomes)
+
+### 운영 관점
+
+- 고속 타이핑 업무에서 포커스 이탈성 오류 감소
+- 모달 오작동으로 인한 재입력/정정 시간 감소
+- 입력자 집중 흐름 유지로 작업 피로도 완화
+
+### 제품/조직 관점
+
+- “접근성”을 준수 항목에서 **품질/비용 절감 레버**로 전환
+- 레거시 코드베이스에서도 단계적 품질 개선이 가능하다는 실행 사례 확보
+- 향후 공통 UI 가이드라인/디자인 시스템 연계의 기반 마련
+
+> 참고: 현재 단계는 PoC이며, 실제 운영 반영 시 아래 KPI로 효과를 계량화합니다.
+>
+> - 세션당 포커스 이탈 횟수
+> - 모달 입력 취소/재시도 비율
+> - 데이터 정정 건수 및 정정 리드타임
+> - 입력 완료까지의 평균 소요 시간
+
+---
+
+## 5) 검증 범위 및 결과 요약
+
+현재 PoC에서 확인한 핵심 동작:
+
+- 모달 내부 `Tab`/`Shift+Tab` 순환 유지
+- 외부 요소 포커스 이동 시도 차단 및 내부 복귀
+- 모달 종료 시 트리거 포커스 복원
+- 필수값 검증 실패 시 모달 유지 + 오류 메시지 제공
+
+미포함 범위(후속 과제):
+
+- 중첩 모달 스택 매니저
+- Shadow DOM/`iframe` 경계에 대한 확장 정책
+- E2E 자동화 기반 회귀 검증 파이프라인 고도화
+
+---
+
+## 6) 기술 스택
+
+- Runtime: `React 19` + `TypeScript` + `Vite`
+- 문서/시각 검증: `Storybook` (`addon-a11y`, `autodocs`)
+- 품질 도구: `ESLint`, `Vitest`, `Playwright` (프로젝트 의존성 포함)
 - Package Manager: `pnpm`
-- Runtime / Build: `Vite + React + TypeScript`
-- Docs / UI Test: `Storybook` + `@storybook/addon-a11y`
 
-## Implemented Scope
+---
 
-### 1) `useFocusTrap` Hook
-
-- 외부 라이브러리 없이 Web API + React Hook으로 구현
-- `Tab` / `Shift + Tab` 순환 제어
-- 모달 활성화 시 초기 포커스 이동
-- 모달 닫힘 시 이전 포커스 복원
-- `focusin` 캡처로 모달 외부 포커스 이탈 방어
-
-#### Hook API
-
-`useFocusTrap(containerRef, isActive, options)`
-
-- `containerRef`: trap 경계를 나타내는 루트 요소 ref
-- `isActive`: trap 활성/비활성 상태
-- `options.initialFocusRef`: 열리자마자 우선 포커스를 줄 대상(선택)
-- `options.restoreFocus` (default: `true`): 닫힐 때 오픈 직전 포커스 복원 여부
-
-#### Focus Algorithm (설계 의도)
-
-1. 활성화 시 현재 `document.activeElement`를 저장해 종료 시점에 복원합니다.
-2. `container`에 `tabindex="-1"` fallback을 보장해 내부 focusable이 없어도 trap이 깨지지 않게 합니다.
-3. 초기 포커스 우선순위:
-   - `initialFocusRef`가 유효하면 해당 요소
-   - 아니면 첫 번째 focusable 요소
-   - 없으면 container 자체
-4. `keydown(Tab)`을 capture 단계에서 가로채 first/last 경계를 순환시킵니다.
-5. `focusin`을 capture 단계에서 감시해 포커스가 외부로 튀면 내부 첫 요소로 즉시 복귀시킵니다.
-6. cleanup에서 리스너를 제거하고(`restoreFocus=true`이면) 오픈 전 포커스로 복원합니다.
-
-#### Focusable 판별 규칙
-
-`useFocusTrap`은 단순 selector 매칭 외에 실제 포커스 가능 여부를 필터링합니다.
-
-- 제외: `disabled`, `aria-hidden="true"`, `inert` 내부 요소
-- 제외: `display: none`, `visibility: hidden`
-- 브라우저 차이(Safari/Chrome)를 줄이기 위해 `offset*`와 `getClientRects()`를 함께 확인
-
-#### Why Capture + `focusin`?
-
-- `keydown` capture: 브라우저별 이벤트 전파 타이밍 차이에서도 Tab 순환 제어를 안정화
-- `focusin` capture: 키보드뿐 아니라 스크립트/마우스 클릭으로 생기는 외부 포커스까지 차단
-
-#### Limitations / Trade-offs
-
-- 복잡한 Shadow DOM 경계를 완전하게 다루지는 않습니다.
-- `iframe` 간 포커스 이동은 문서 경계 특성상 별도 정책이 필요합니다.
-- 중첩 모달 스택 관리는 현재 범위 밖이며, 필요 시 stack manager를 추가해야 합니다.
-
-### 2) `DataEntryModal` Component
-
-- `role="dialog"` + `aria-modal="true"`
-- `aria-labelledby`와 제목 `id` 연결
-- `label htmlFor` ↔ `input id` 매핑으로 접근성 네이밍 보장
-- 임상 데이터 입력 폼(피험자 ID, 방문 코드, 수축기 혈압) 예시 포함
-
-### 3) Storybook Story
-
-- `autodocs` 활성화
-- 인터랙티브 스토리에서 직접 모달 열기/닫기 및 키보드 순환 테스트 가능
-
-## Project Structure
-
-```text
-src/
-  hooks/
-    useFocusTrap.ts
-  components/
-    DataEntryModal.tsx
-    DataEntryModal.css
-    DataEntryModal.stories.tsx
-```
-
-## Quick Start
+## 7) 빠른 실행 (참고)
 
 ```bash
 pnpm install
-pnpm dev
-```
-
-Storybook 실행:
-
-```bash
 pnpm storybook
 ```
 
-## Manual Verification (Current)
+## 8) `useFocusTrap` 핵심 요약
 
-1. 모달 열기 버튼 클릭
-2. `Tab` 반복 입력 시 마지막 요소에서 첫 요소로 순환되는지 확인
-3. `Shift + Tab` 입력 시 첫 요소에서 마지막 요소로 순환되는지 확인
-4. 모달 밖 요소로 포커스가 나가지 않는지 확인
-5. 모달 닫은 후 오픈 전 포커스 위치로 복귀하는지 확인
+- 목적: 모달 오픈 동안 키보드 포커스가 배경 UI로 새지 않도록 유지
+- 시그니처: `useFocusTrap(containerRef, isActive, { initialFocusRef, restoreFocus })`
+- 주요 옵션:
+  - `initialFocusRef`: 모달 진입 시 우선 포커스할 요소
+  - `restoreFocus`(기본 `true`): 모달 종료 후 이전 포커스로 복귀
 
-## Accessibility & Storybook Status
+```tsx
+const dialogRef = useRef<HTMLDivElement>(null);
+const firstFieldRef = useRef<HTMLInputElement>(null);
 
-- WAI-ARIA 적용:
-  - `DataEntryModal`: `role="dialog"`, `aria-modal="true"`, `aria-labelledby`, close 버튼 `aria-label`
-- Storybook autodocs:
-  - `DataEntryModal.stories.tsx`: `tags: ["autodocs"]`
-  - `GroupAndVisitWorkspace.stories.tsx`: `tags: ["autodocs"]`
+useFocusTrap(dialogRef, isOpen, {
+  initialFocusRef: firstFieldRef,
+  restoreFocus: true,
+});
+```
