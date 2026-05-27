@@ -19,9 +19,34 @@ type VisitGroupCard = {
   visits: VisitRow[];
 };
 
+type GroupAndVisitWorkspaceStoryArgs = {
+  sidebarWidth: number;
+  showGuide: boolean;
+  trapEnabled: boolean;
+};
+
 const meta = {
   title: "Pages/GroupAndVisitWorkspace",
   tags: ["autodocs"],
+  args: {
+    sidebarWidth: 240,
+    showGuide: true,
+    trapEnabled: true,
+  },
+  argTypes: {
+    sidebarWidth: {
+      control: { type: "range", min: 200, max: 320, step: 10 },
+      description: "좌측 사이드바 너비(px)",
+    },
+    showGuide: {
+      control: "boolean",
+      description: "입력 가이드 블록 표시 여부",
+    },
+    trapEnabled: {
+      control: "boolean",
+      description: "워크스페이스 영역 focus trap 활성화 여부",
+    },
+  },
   parameters: {
     layout: "fullscreen",
     docs: {
@@ -31,13 +56,13 @@ const meta = {
       },
     },
   },
-} satisfies Meta;
+} satisfies Meta<GroupAndVisitWorkspaceStoryArgs>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  render: () => {
+  render: (args: GroupAndVisitWorkspaceStoryArgs) => {
     const workspaceRef = useRef<HTMLDivElement>(null);
     const visitLabelInputRefs = useRef<Record<string, HTMLInputElement | null>>(
       {},
@@ -244,7 +269,7 @@ export const Default: Story = {
     };
 
     // Storybook 캔버스에서 Tab 순환이 바깥 UI로 빠지지 않도록 페이지 자체에 trap을 적용합니다.
-    useFocusTrap(workspaceRef, true, { restoreFocus: false });
+    useFocusTrap(workspaceRef, args.trapEnabled, { restoreFocus: false });
 
     useEffect(() => {
       if (!pendingFocusVisitId) {
@@ -269,7 +294,7 @@ export const Default: Story = {
         <div style={{ display: "flex", minHeight: "100vh" }}>
           <aside
             style={{
-              width: 240,
+              width: args.sidebarWidth,
               borderRight: "1px solid #d9e1ee",
               background: "#ffffff",
               padding: 16,
@@ -332,7 +357,9 @@ export const Default: Story = {
               }}
             >
               <div>
-                <h3 style={{ margin: 0, fontSize: 24 }}>Group & Visit</h3>
+                <h3 style={{ margin: 0, fontSize: 24 }}>
+                  Group & Visit
+                </h3>
                 <p style={{ margin: "8px 0 0", color: "#475569" }}>
                   Visit Group/Visit 입력 시나리오에서 행 삽입/삭제와 키보드 이동
                   흐름을 검증합니다.
@@ -349,34 +376,40 @@ export const Default: Story = {
               </div>
             </header>
 
-            <section
-              aria-label="입력 가이드"
-              style={{
-                marginBottom: 14,
-                border: "1px solid #d9e1ee",
-                borderRadius: 10,
-                background: "#ffffff",
-                padding: "10px 12px",
-                color: "#334155",
-                fontSize: 13,
-                lineHeight: 1.55,
-              }}
-            >
-              <strong
-                style={{ display: "block", marginBottom: 4, color: "#0f172a" }}
+            {args.showGuide ? (
+              <section
+                aria-label="입력 가이드"
+                style={{
+                  marginBottom: 14,
+                  border: "1px solid #d9e1ee",
+                  borderRadius: 10,
+                  background: "#ffffff",
+                  padding: "10px 12px",
+                  color: "#334155",
+                  fontSize: 13,
+                  lineHeight: 1.55,
+                }}
               >
-                입력 가이드
-              </strong>
-              <div>
-                목적: Visit 입력 중 행 삽입/삭제를 빠르게 수행하고 저장 단위를
-                Group으로 유지합니다.
-              </div>
-              <div>
-                흐름: 각 행의 Visit Label 입력 후 Action의 + 행 추가로 해당 행
-                아래에 즉시 삽입합니다.
-              </div>
-              <div>{`검증: Tab 이동(Visit Label -> + 행 추가 -> - 행 삭제), 삽입 위치, Save Group 결과 메시지를 확인합니다.`}</div>
-            </section>
+                <strong
+                  style={{
+                    display: "block",
+                    marginBottom: 4,
+                    color: "#0f172a",
+                  }}
+                >
+                  입력 가이드
+                </strong>
+                <div>
+                  목적: Visit 입력 중 행 삽입/삭제를 빠르게 수행하고 저장 단위를
+                  Group으로 유지합니다.
+                </div>
+                <div>
+                  흐름: 각 행의 Visit Label 입력 후 Action의 + 행 추가로 해당 행
+                  아래에 즉시 삽입합니다.
+                </div>
+                <div>{`검증: Tab 이동(Visit Label -> + 행 추가 -> - 행 삭제), 삽입 위치, Save Group 결과 메시지를 확인합니다.`}</div>
+              </section>
+            ) : null}
 
             <div style={{ display: "grid", gap: 14 }}>
               {groups.map((group, groupIndex) => (
@@ -473,6 +506,7 @@ export const Default: Story = {
                         borderRadius: 8,
                         background: "#fff",
                         fontSize: 13,
+                        cursor: "pointer",
                       }}
                     >
                       <input
